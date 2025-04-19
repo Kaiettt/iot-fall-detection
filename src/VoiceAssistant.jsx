@@ -42,6 +42,17 @@ export default function VoiceAssistant() {
                 const transcriptText = event.results[0][0].transcript.toLowerCase();
                 setTranscript(transcriptText);
 
+                // Handle greetings
+                if (transcriptText.includes('hello') ||
+                    transcriptText.includes('hi') ||
+                    transcriptText.includes('hey')) {
+                    const greetingResponse = "How can I help you?";
+                    setResponse(greetingResponse);
+                    speakResponse(greetingResponse);
+                    return;
+                }
+
+                // Handle grandparent status query
                 if (transcriptText.includes('grandpa') ||
                     transcriptText.includes('grandma') ||
                     transcriptText.includes('grandmother') ||
@@ -123,12 +134,24 @@ export default function VoiceAssistant() {
     const handleManualSubmit = () => {
         if (!manualInput.trim()) return;
 
+        const input = manualInput.toLowerCase();
         setTranscript(manualInput);
-        if (manualInput.toLowerCase().includes('grandpa') ||
-            manualInput.toLowerCase().includes('grandma') ||
-            manualInput.toLowerCase().includes('oke')) {
+
+        // Handle greetings in manual input
+        if (input.includes('hello') ||
+            input.includes('hi') ||
+            input.includes('hey')) {
+            const greetingResponse = "How can I help you?";
+            setResponse(greetingResponse);
+            speakResponse(greetingResponse);
+        } else if (input.includes('grandpa') ||
+            input.includes('grandma') ||
+            input.includes('grandmother') ||
+            input.includes('grandfather') ||
+            input.includes('oke')) {
             fetchFallData();
         }
+
         setManualInput('');
     };
 
@@ -157,7 +180,7 @@ export default function VoiceAssistant() {
             const fallDataRef = query(
                 ref(realtime_db, `users/${userId}/fallData`),
                 orderByChild("timestamp"),
-                limitToLast(100)
+                limitToLast(1) // Only fetch the latest event
             );
             const fallSnapshot = await get(fallDataRef);
 
@@ -169,18 +192,17 @@ export default function VoiceAssistant() {
                 return;
             }
 
-            const fallEntries = [];
+            let latestFall = null;
             fallSnapshot.forEach((childSnapshot) => {
-                fallEntries.push({
+                latestFall = {
                     id: childSnapshot.key,
                     ...childSnapshot.val()
-                });
+                };
             });
 
-            fallEntries.sort((a, b) => b.timestamp - a.timestamp);
-            setFallData(fallEntries);
+            // Store only the latest event in fallData for display
+            setFallData([latestFall]);
 
-            const latestFall = fallEntries[0];
             const fallTime = new Date(latestFall.timestamp).toLocaleString();
 
             let responseText = "";
@@ -212,9 +234,11 @@ export default function VoiceAssistant() {
             minute: '2-digit'
         });
     };
+
     const handleOpenDashBoard = () => {
-        navigate("/")
+        navigate("/");
     };
+
     return (
         <div className="max-w-md mx-auto bg-white rounded-xl shadow-md overflow-hidden md:max-w-2xl m-2">
             <div className="p-4 sm:p-6">
@@ -274,7 +298,7 @@ export default function VoiceAssistant() {
                         <input
                             type="text"
                             className="flex-1 p-2 border rounded-l-lg text-sm sm:text-base"
-                            placeholder="Type 'Is my grandpa okay?'"
+                            placeholder="Type 'Is my grandpa okay?' or 'Hello'"
                             value={manualInput}
                             onChange={(e) => setManualInput(e.target.value)}
                             onKeyPress={(e) => {
@@ -320,7 +344,7 @@ export default function VoiceAssistant() {
 
                 {fallData && fallData.length > 0 && (
                     <div className="mt-4">
-                        <h3 className="text-md sm:text-lg font-semibold text-gray-700 mb-2">Recent Events</h3>
+                        <h3 className="text-md sm:text-lg font-semibold text-gray-700 mb-2">Latest Event</h3>
                         <div className="max-h-48 sm:max-h-64 overflow-y-auto text-xs sm:text-sm">
                             <table className="min-w-full divide-y divide-gray-200">
                                 <thead className="bg-gray-50">
@@ -331,7 +355,7 @@ export default function VoiceAssistant() {
                                     </tr>
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-200">
-                                    {fallData.slice(0, 5).map((event) => (
+                                    {fallData.map((event) => (
                                         <tr key={event.id}>
                                             <td className="px-2 py-1 sm:px-4 sm:py-2 whitespace-nowrap text-gray-600">
                                                 {formatTimestamp(event.timestamp)}
@@ -355,7 +379,7 @@ export default function VoiceAssistant() {
 
                 <div className="mt-4 flex items-center text-gray-500 text-xs sm:text-sm">
                     <User size={isMobile ? 12 : 16} className="mr-1" />
-                    <span>Try: "Is my grandpa okay?"</span>
+                    <span>Try: "Is my grandpa okay?" or "Hello"</span>
                 </div>
             </div>
         </div>
