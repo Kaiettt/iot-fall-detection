@@ -59,7 +59,7 @@ function SignIn() {
             localStorage.setItem("email", username);
             localStorage.setItem("userId", userId);
 
-            navigate('/');
+            navigate('/voice');
         } catch (error) {
             console.error("Error signing in:", error);
             setError('An error occurred during sign in. Please try again.');

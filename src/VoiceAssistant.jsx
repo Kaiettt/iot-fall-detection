@@ -4,6 +4,7 @@ import { getAuth } from 'firebase/auth';
 import { realtime_db } from './config/firebase';
 import { Mic, MicOff, User, VolumeX, Volume2 } from 'lucide-react';
 
+import { useNavigate } from "react-router-dom";
 export default function VoiceAssistant() {
     const [isListening, setIsListening] = useState(false);
     const [transcript, setTranscript] = useState('');
@@ -14,7 +15,7 @@ export default function VoiceAssistant() {
     const [isSpeaking, setIsSpeaking] = useState(false);
     const [manualInput, setManualInput] = useState('');
     const [isMobile, setIsMobile] = useState(false);
-
+    const navigate = useNavigate();
     const recognitionRef = useRef(null);
     const synthRef = useRef(typeof window !== 'undefined' ? window.speechSynthesis : null);
 
@@ -211,11 +212,19 @@ export default function VoiceAssistant() {
             minute: '2-digit'
         });
     };
-
+    const handleOpenDashBoard = () => {
+        navigate("/")
+    };
     return (
         <div className="max-w-md mx-auto bg-white rounded-xl shadow-md overflow-hidden md:max-w-2xl m-2">
             <div className="p-4 sm:p-6">
                 <div className="flex justify-between items-center mb-4">
+                    <button
+                        className="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-r-lg text-sm sm:text-base"
+                        onClick={handleOpenDashBoard}
+                    >
+                        Dashboard
+                    </button>
                     <h2 className="text-xl sm:text-2xl font-bold text-gray-800">Voice Assistant</h2>
                     <div className="flex space-x-1 sm:space-x-2">
                         {isSpeaking ? (
@@ -243,8 +252,8 @@ export default function VoiceAssistant() {
                     <button
                         onClick={toggleListening}
                         className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center shadow-lg mb-2 transition-all ${isListening
-                                ? 'bg-red-500 hover:bg-red-600 animate-pulse'
-                                : 'bg-blue-500 hover:bg-blue-600'
+                            ? 'bg-red-500 hover:bg-red-600 animate-pulse'
+                            : 'bg-blue-500 hover:bg-blue-600'
                             }`}
                         disabled={loading}
                         aria-label={isListening ? 'Stop listening' : 'Start listening'}
